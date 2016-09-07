@@ -1,0 +1,66 @@
+FROM debian:8.4
+MAINTAINER Adam Wilmore adam.wilmore@iag.com.au
+
+# Update sources.ist
+COPY artefacts/etc/apt/sources.list /etc/apt/sources.list
+
+# Get packages first, including locales
+RUN apt-get update && \
+      apt-get install -y \
+      locales \
+      curl \
+      wget \
+      less \
+      openssh-client \
+      net-tools \
+      passwd \
+      sudo \
+      vim \
+      htop \
+      supervisor \
+      rsyslog \
+      libfontconfig
+
+# Set TZ and Locale stuff
+RUN cp -p /usr/share/zoneinfo/Australia/Sydney /etc/localtime && \
+  locale-gen en_US en_US.UTF-8 en_AU en_AU.UTF-8 && \
+  dpkg-reconfigure locales
+
+# Install node
+COPY artefacts/tmp/install-node.sh /tmp/install-node.sh
+RUN /tmp/install-node.sh
+
+# Prepare supervisor conf
+COPY artefacts/etc/supervisor /etc/supervisor
+
+# Prepare rsyslog conf
+COPY artefacts/etc/rsyslog.conf /etc/rsyslog.conf
+COPY artefacts/etc/rsyslog.d /etc/rsyslog.d
+
+# Set up root folder
+COPY artefacts/root /root
+RUN chmod 755 /root/services.sh
+
+# Prepare useful env vars
+COPY artefacts/tmp/prepare-env.sh /tmp/prepare-env.sh
+RUN /tmp/prepare-env.sh
+
+# Prepare log files
+RUN mkdir -p /var/log/nodeapp && \
+  touch /var/log/nodeapp/application.log && \
+  touch /var/log/nodeapp/application.err && \
+  mkdir -p /var/log/supervisor && \
+  touch /var/log/supervisor/supervisord.log
+
+# Clean up
+RUN rm -rf /tmp/* && \
+  apt-get clean autoclean && \
+  apt-get autoremove -y && \
+  rm -rf /var/lib/{apt,dpkg,cache,log}/
+
+# Expose port
+EXPOSE 9000
+
+# Container initialiser
+CMD ["/root/services.sh"]
+

@@ -1,0 +1,40 @@
+FROM debian:8.4
+MAINTAINER Adam Wilmore adam.wilmore@iag.com.au
+
+# Copy build scripts
+COPY artefacts/tmp /tmp
+
+# Build everything
+RUN set -x && \
+    apt-get update && \
+    apt-get install -y \
+      locales \
+      curl \
+      less \
+      supervisor \
+      rsyslog && \
+    cp -p /usr/share/zoneinfo/Australia/Sydney /etc/localtime && \
+    locale-gen en_US en_US.UTF-8 en_AU en_AU.UTF-8 && \
+    dpkg-reconfigure locales && \
+    /tmp/install-node.sh && \
+    /tmp/prepare-env.sh && \
+    mkdir -p /var/log/nodeapp && \
+    touch /var/log/nodeapp/application.log && \
+    touch /var/log/nodeapp/application.err && \
+    mkdir -p /var/log/supervisor && \
+    touch /var/log/supervisor/supervisord.log && \
+    rm -rf /tmp/* && \
+    apt-get clean autoclean && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/{apt,dpkg,cache,log}/
+
+# Copy everything else
+COPY artefacts/etc /etc
+COPY artefacts/root /root
+
+# Expose port
+EXPOSE 9000
+
+# Container initialiser
+CMD ["/root/services.sh"]
+
