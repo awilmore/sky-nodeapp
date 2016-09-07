@@ -29,8 +29,6 @@ increment_version() {
 }
 
 
-
-
 # Source properties
 check_file "application.conf"
 . application.conf
@@ -89,5 +87,8 @@ git commit -m "[RELMGMT: Updated version.txt to version $NEXTV-snapshot]"
 git push origin
 
 # Finished
-echo " *** RELEASE COMPLETE ***"
+echo " "
+echo " ************************** "
+echo " ***  RELEASE COMPLETE  *** "
+echo " ************************** "
 echo " "
