@@ -67,11 +67,14 @@ docker push $IMAGE:$VERSION
 # Tag repo
 echo " * Tagging repo ..."
 echo " "
+
+BRANCH_NAME=$( git symbolic-ref --short HEAD )
+
 git config user.name "Release Manager"
 git config user.email "release@edge"
 git add $VERSION_FILE
 git commit -m "[RELMGMT: Updated version.txt to version $VERSION]"
-git push origin
+git push origin $BRANCH_NAME
 
 echo " "
 git tag -a version-$VERSION -m "[RELMGMT: Tagged version $VERSION]"
@@ -84,7 +87,7 @@ NEXTV=$( increment_version $VERSION )
 echo "$NEXTV-snapshot" > $VERSION_FILE
 git add $VERSION_FILE
 git commit -m "[RELMGMT: Updated version.txt to version $NEXTV-snapshot]"
-git push origin
+git push origin $BRANCH_NAME
 
 # Finished
 echo " "
